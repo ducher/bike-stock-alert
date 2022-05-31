@@ -22,6 +22,7 @@ function getConf() {
 
 const conf = getConf();
 const skus = conf.skusToCheck || SKUS_TO_CHECK;
+const alreadyNotifiedSkus = {};
 
 function sendTelegramMessage(APIKey, recipient, message) {
 
@@ -83,10 +84,16 @@ function getBikeStock() {
           if(stock > 0) {
             const msg = `Yay they have stock for bike ${skus[sku]}, ${stock} remaining`;
             console.log(msg);
-            sendTelegramMessage(conf.telegramAPIKey, conf.telegramRecipient, msg);
+            if(!alreadyNotifiedSkus[sku]) {
+              sendTelegramMessage(conf.telegramAPIKey, conf.telegramRecipient, msg);
+              alreadyNotifiedSkus[sku] = true;
+            } else {
+              console.log('Sku already notified');
+            }
           } else {
             const msg = `No luck for bike ${skus[sku]}`;
             console.log(msg);
+            alreadyNotifiedSkus[sku] = false;
           }
         }
       })
