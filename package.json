@@ -1,0 +1,14 @@
+{
+  "name": "bike-stock-alert",
+  "version": "1.0.0",
+  "description": "Send a telegram message when the GRVL 120 is in stock",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Pierre Ducher",
+  "license": "ISC",
+  "dependencies": {
+    "node-cron": "^3.0.0"
+  }
+}

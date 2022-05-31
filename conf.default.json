@@ -1,0 +1,8 @@
+{
+  "telegramAPIKey": "Create a bot on telegram",
+  "telegramRecipient": "Get your recipient ID on telegran",
+  "skusToCheck" : {
+    "2962862": "GRVL 120 S",
+    "2962864": "GRVL 120 XS"
+  }
+}
