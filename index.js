@@ -91,7 +91,7 @@ function getBikeStock() {
               console.log('Sku already notified');
             }
           } else {
-            const msg = `No luck for bike ${skus[sku]}`;
+            const msg = `No luck for bike ${skus[sku]} on ${new Date()}`;
             console.log(msg);
             alreadyNotifiedSkus[sku] = false;
           }
@@ -102,7 +102,7 @@ function getBikeStock() {
   .end();
 }
 
-cron.schedule('*/5 * * * *', getBikeStock);
+cron.schedule('*/6 * * * *', getBikeStock);
 getBikeStock();
 http.createServer((req, res) => {
   res.writeHead(200, {'Content-Type': 'text/plain'});
