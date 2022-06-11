@@ -24,7 +24,7 @@ function getConf() {
 
 const conf = getConf();
 const skus = conf.skusToCheck || SKUS_TO_CHECK;
-const alreadyNotifiedSkus = {};
+const alreadyNotifiedStockIds = {};
 
 function sendTelegramMessage(APIKey, recipient, message) {
 
@@ -63,6 +63,15 @@ function sendTelegramMessage(APIKey, recipient, message) {
   req.end();
 }
 
+function notifyStockOnceOnTelegram(APIKey, recipient, message, stockId) {
+  if(!alreadyNotifiedStockIds[stockId]) {
+    sendTelegramMessage(APIKey, recipient, message);
+    alreadyNotifiedStockIds[stockId] = true;
+  } else {
+    console.log(`StockId ${stockId} already notified`);
+  }
+}
+
 async function isCanyonBikeAvailable(urlObject) {
   const { data: bikePage } = await axios.get(urlObject.url);
   const $ = cheerio.load(bikePage);
@@ -78,7 +87,7 @@ async function checkCanyonStocks() {
       if(isInStock){
         const msg = `Yay they have stock for bike ${urlObject.name}, ${urlObject.size}`;
         console.log(msg);
-        sendTelegramMessage(conf.telegramAPIKey, conf.telegramRecipient, msg);
+        notifyStockOnceOnTelegram(conf.telegramAPIKey, conf.telegramRecipient, msg,`${urlObject.url}:${urlObject.size}`);
       } else {
         console.log(`No luck for bike ${urlObject.name}, ${urlObject.size}`)
       }
@@ -96,16 +105,10 @@ async function getDecatStock() {
     if(stock > 0) {
       const msg = `Yay they have stock for bike ${skus[sku]}, ${stock} remaining`;
       console.log(msg);
-      if(!alreadyNotifiedSkus[sku]) {
-        sendTelegramMessage(conf.telegramAPIKey, conf.telegramRecipient, msg);
-        alreadyNotifiedSkus[sku] = true;
-      } else {
-        console.log('Sku already notified');
-      }
+      notifyStockOnceOnTelegram(conf.telegramAPIKey, conf.telegramRecipient, msg, `D4:${sku}`);
     } else {
       const msg = `No luck for bike ${skus[sku]}`;
       console.log(msg);
-      alreadyNotifiedSkus[sku] = false;
     }
   }
 }
