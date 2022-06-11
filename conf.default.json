@@ -4,5 +4,12 @@
   "skusToCheck" : {
     "2962862": "GRVL 120 S",
     "2962864": "GRVL 120 XS"
-  }
+  },
+  "canyonUrlsToCheck": [
+    {
+      "url": "https://www.canyon.com/en-fr/gravel-bikes/bike-packing/grizl/al/grizl-6/2708.html?dwvar_2708_pv_rahmenfarbe=GN",
+      "name": "Grizl 6",
+      "size": "XS"
+    }
+  ]
 }

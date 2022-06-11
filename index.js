@@ -2,6 +2,8 @@
 const https = require("https");
 const http = require("http");
 const cron = require('node-cron');
+const axios = require("axios");
+const cheerio = require('cheerio');
 
 const PORT = process.env.PORT || 5001;
 const SKUS_TO_CHECK = {
@@ -61,7 +63,33 @@ function sendTelegramMessage(APIKey, recipient, message) {
   req.end();
 }
 
-function getBikeStock() {
+async function isCanyonBikeAvailable(urlObject) {
+  const { data: bikePage } = await axios.get(urlObject.url);
+  const $ = cheerio.load(bikePage);
+  const sizeClass = $(`[data-product-size=${urlObject.size}]`).attr("class");
+  const outOfStock = sizeClass.includes("nonSelectableVariation");
+  return !outOfStock;
+}
+
+async function checkCanyonStocks() {
+  conf.canyonUrlsToCheck.map(async (urlObject) => {
+    try {
+      const isInStock = await isCanyonBikeAvailable(urlObject);
+      if(isInStock){
+        const msg = `Yay they have stock for bike ${urlObject.name}, ${urlObject.size}`;
+        console.log(msg);
+        sendTelegramMessage(conf.telegramAPIKey, conf.telegramRecipient, msg);
+      } else {
+        console.log(`No luck for bike ${urlObject.name}, ${urlObject.size}`)
+      }
+    } catch (error) {
+      console.log(`Error fetching info for bike ${urlObject.name} at URL ${urlObject.url}`);
+      console.log(error);
+    }
+  })
+}
+
+function getDecatStock() {
   https
   .request(
     {
@@ -91,7 +119,7 @@ function getBikeStock() {
               console.log('Sku already notified');
             }
           } else {
-            const msg = `No luck for bike ${skus[sku]} on ${new Date()}`;
+            const msg = `No luck for bike ${skus[sku]}`;
             console.log(msg);
             alreadyNotifiedSkus[sku] = false;
           }
@@ -102,8 +130,14 @@ function getBikeStock() {
   .end();
 }
 
-cron.schedule('*/6 * * * *', getBikeStock);
-getBikeStock();
+function checkAllStocks() {
+  console.log(`Checking all stocks ${new Date()}`);
+  getDecatStock();
+  checkCanyonStocks();
+}
+
+cron.schedule('*/6 * * * *', checkAllStocks);
+checkAllStocks();
 http.createServer((req, res) => {
   res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end('Kein Bike Hier\n');
