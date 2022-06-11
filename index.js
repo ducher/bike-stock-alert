@@ -89,45 +89,25 @@ async function checkCanyonStocks() {
   })
 }
 
-function getDecatStock() {
-  https
-  .request(
-    {
-      hostname: "www.decathlon.fr",
-      path: `/fr/ajax/nfs/stocks/online?skuIds=${Object.keys(skus).join(',')}`,
-    },
-    res => {
-      let data = "";
-
-      res.on("data", d => {
-        data += d;
-      })
-      res.on("end", () => {
-        /**
-         * data: {"availabilities":[],"total":0,"reason":"no_availabilities","message":"Diese Termine stehen zu einem späteren Zeitpunkt wieder für eine Online-Buchung zur Verfügung. ","number_future_vaccinations":79818}
-         */
-        const parsedData = JSON.parse(data);
-        for (const sku in skus) {
-          const stock = parsedData[sku].stockOnline;
-          if(stock > 0) {
-            const msg = `Yay they have stock for bike ${skus[sku]}, ${stock} remaining`;
-            console.log(msg);
-            if(!alreadyNotifiedSkus[sku]) {
-              sendTelegramMessage(conf.telegramAPIKey, conf.telegramRecipient, msg);
-              alreadyNotifiedSkus[sku] = true;
-            } else {
-              console.log('Sku already notified');
-            }
-          } else {
-            const msg = `No luck for bike ${skus[sku]}`;
-            console.log(msg);
-            alreadyNotifiedSkus[sku] = false;
-          }
-        }
-      })
+async function getDecatStock() {
+  const { data: parsedData } = await axios.get(`https://www.decathlon.fr/fr/ajax/nfs/stocks/online?skuIds=${Object.keys(skus).join(',')}`);
+  for (const sku in skus) {
+    const stock = parsedData[sku].stockOnline;
+    if(stock > 0) {
+      const msg = `Yay they have stock for bike ${skus[sku]}, ${stock} remaining`;
+      console.log(msg);
+      if(!alreadyNotifiedSkus[sku]) {
+        sendTelegramMessage(conf.telegramAPIKey, conf.telegramRecipient, msg);
+        alreadyNotifiedSkus[sku] = true;
+      } else {
+        console.log('Sku already notified');
+      }
+    } else {
+      const msg = `No luck for bike ${skus[sku]}`;
+      console.log(msg);
+      alreadyNotifiedSkus[sku] = false;
     }
-  )
-  .end();
+  }
 }
 
 function checkAllStocks() {
